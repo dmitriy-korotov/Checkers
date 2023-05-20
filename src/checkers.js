@@ -35,50 +35,123 @@ function clearSelections(field)
 
 
 
-function selectBlackChecker(num_row, num_ceil, field)
+function selectPathOverChakers(num_row, num_ceil, field, class_outher_checker, prev_move)
 {
-    field[num_row][num_ceil].classList.add("selected");
-    field[num_row][num_ceil].classList.remove("white");
+    if (0 <= num_row && num_row < field.length && 0 <= num_ceil && num_ceil < field[0].length && !field[num_row][num_ceil].hasChildNodes())
+    {
+        let this_elem = field[num_row][num_ceil];
 
-    if (num_row + 1 < field.length && num_ceil + 1 < field[0].length)
-    {
-        if (!field[num_row + 1][num_ceil + 1].hasChildNodes())
+        this_elem.classList.add("selected");
+        this_elem.classList.remove("white");
+
+        // Right Bottom
+        if (prev_move != DirectionMoves.LeftTop && 0 <= (num_row + 1) && (num_row + 1) < field.length && num_ceil + 1 < field[0].length)
         {
-            field[num_row + 1][num_ceil + 1].classList.add("selected");
-            field[num_row + 1][num_ceil + 1].classList.remove("white");
+            let right_elem = field[num_row + 1][num_ceil + 1];
+            if (right_elem.hasChildNodes() && right_elem.firstChild.classList.contains(class_outher_checker))
+            {
+                selectPathOverChakers(num_row + 2, num_ceil + 2, field, class_outher_checker, DirectionMoves.RightBottom);   
+            }
         }
-    }
-    if (num_row + 1 < field.length && num_ceil - 1 >= 0)
-    {
-        if (!field[num_row + 1][num_ceil - 1].hasChildNodes())
+        // Left Bottom
+        if (prev_move != DirectionMoves.RightTop && 0 <= (num_row + 1) && (num_row + 1) < field.length && num_ceil - 1 >= 0)
         {
-            field[num_row + 1][num_ceil - 1].classList.add("selected");
-            field[num_row + 1][num_ceil - 1].classList.remove("white");
+            let left_elem = field[num_row + 1][num_ceil - 1];
+            if (left_elem.hasChildNodes() && left_elem.firstChild.classList.contains(class_outher_checker))
+            {
+                selectPathOverChakers(num_row + 2, num_ceil - 2, field, class_outher_checker, DirectionMoves.LeftBottom);   
+            }
+        }
+        // Right Top
+        if (prev_move != DirectionMoves.LeftBottom && 0 <= (num_row - 1) && (num_row - 1) < field.length && num_ceil + 1 < field[0].length)
+        {
+            let right_elem = field[num_row - 1][num_ceil + 1];
+            if (right_elem.hasChildNodes() && right_elem.firstChild.classList.contains(class_outher_checker))
+            {
+                selectPathOverChakers(num_row - 2, num_ceil + 2, field, class_outher_checker, DirectionMoves.RightTop);   
+            }
+        }
+        // Left Top
+        if (prev_move != DirectionMoves.RightBottom && 0 <= (num_row - 1) && (num_row - 1) < field.length && num_ceil - 1 >= 0)
+        {
+            let left_elem = field[num_row - 1][num_ceil - 1];
+            if (left_elem.hasChildNodes() && left_elem.firstChild.classList.contains(class_outher_checker))
+            {
+                selectPathOverChakers(num_row - 2, num_ceil - 2, field, class_outher_checker, DirectionMoves.LeftTop);   
+            }
         }
     }
 }
 
 
 
-function selectWhiteChecker(num_row, num_ceil, field)
+function selectChecker(num_row, num_ceil, field, vertical_step, class_outher_checker)
 {
-    field[num_row][num_ceil].classList.add("selected");
-    field[num_row][num_ceil].classList.remove("black");
+    let this_elem = field[num_row][num_ceil];
 
-    if (num_row - 1 >= 0 && num_ceil + 1 < field[0].length)
+    this_elem.classList.add("selected");
+    this_elem.classList.remove("white");
+
+    // Right forward
+    if (0 <= (num_row + vertical_step) && (num_row + vertical_step) < field.length && num_ceil + 1 < field[0].length)
     {
-        if (!field[num_row - 1][num_ceil + 1].hasChildNodes())
+        let right_elem = field[num_row + vertical_step][num_ceil + 1];
+
+        if (!right_elem.hasChildNodes())
         {
-            field[num_row - 1][num_ceil + 1].classList.add("selected");
-            field[num_row - 1][num_ceil + 1].classList.remove("black");
+            right_elem.classList.add("selected");
+            right_elem.classList.remove("white");
+        }
+        else if (right_elem.firstChild.classList.contains(class_outher_checker)
+                 &&
+                 0 <= (num_row + 2*vertical_step) && (num_row + 2*vertical_step) < field.length && num_ceil + 2 < field[0].length)
+        {
+            selectPathOverChakers(num_row + 2*vertical_step, num_ceil + 2, field, class_outher_checker,
+                                  (vertical_step > 0) ? DirectionMoves.RightBottom : DirectionMoves.RightTop);
         }
     }
-    if (num_row - 1 >= 0 && num_ceil - 1 >= 0)
+    // Left forward
+    if (0 <= (num_row + vertical_step) && (num_row + vertical_step) < field.length && num_ceil - 1 >= 0)
     {
-        if (!field[num_row - 1][num_ceil - 1].hasChildNodes())
+        let left_elem = field[num_row + vertical_step][num_ceil - 1];
+
+        if (!left_elem.hasChildNodes())
         {
-            field[num_row - 1][num_ceil - 1].classList.add("selected");
-            field[num_row - 1][num_ceil - 1].classList.remove("black");
+            left_elem.classList.add("selected");
+            left_elem.classList.remove("white");
+        }
+        else if (left_elem.firstChild.classList.contains(class_outher_checker)
+                 &&
+                 0 <= (num_row + 2*vertical_step) && (num_row + 2*vertical_step) < field.length && num_ceil - 2 >= 0)
+        {
+            selectPathOverChakers(num_row + 2*vertical_step, num_ceil - 2, field, class_outher_checker,
+                                  (vertical_step > 0) ? DirectionMoves.LeftBottom : DirectionMoves.LeftTop);
+        }
+    }
+
+    let reverse_vertival_step = -vertical_step;
+
+    // Right back
+    if (0 <= (num_row + reverse_vertival_step) && (num_row + reverse_vertival_step) < field.length && num_ceil + 1 < field[0].length)
+    {
+        let right_elem = field[num_row + reverse_vertival_step][num_ceil + 1];
+
+        if (right_elem.hasChildNodes() && right_elem.firstChild.classList.contains(class_outher_checker))
+        {
+            selectPathOverChakers(num_row + 2*reverse_vertival_step, num_ceil + 2, field, class_outher_checker,
+                                  (reverse_vertival_step > 0) ? DirectionMoves.RightBottom : DirectionMoves.RightTop);
+        }
+
+    }
+    // Left back
+    if (0 <= (num_row + reverse_vertival_step) && (num_row + reverse_vertival_step) < field.length && num_ceil - 1 >= 0)
+    {
+        let left_elem = field[num_row + reverse_vertival_step][num_ceil - 1];
+
+        if (left_elem.hasChildNodes() && left_elem.firstChild.classList.contains(class_outher_checker))
+        {
+            selectPathOverChakers(num_row + 2*reverse_vertival_step, num_ceil - 2, field, class_outher_checker,
+                                  (reverse_vertival_step > 0) ? DirectionMoves.LeftBottom : DirectionMoves.LeftTop);
         }
     }
 }
@@ -87,6 +160,8 @@ function selectWhiteChecker(num_row, num_ceil, field)
 
 function selectPermitedSteps(el, field)
 {
+    CURRENT_SELECTED_CHECKER = el.parentElement;
+
     let div_index_in_ID = el.parentElement.id.indexOf(';');
     let num_row = Number(el.parentElement.id.substr(0, div_index_in_ID));
     let num_ceil = Number(el.parentElement.id.substr(div_index_in_ID + 1, el.parentElement.id.length));
@@ -95,12 +170,28 @@ function selectPermitedSteps(el, field)
 
     if (el.classList.contains("black-checker"))
     {
-        selectBlackChecker(num_row, num_ceil, field);
+        selectChecker(num_row, num_ceil, field, 1, "white-checker");
     }  
     else
     {
-        selectWhiteChecker(num_row, num_ceil, field);
+        selectChecker(num_row, num_ceil, field, -1, "black-checker");
     } 
+}
+
+
+
+function moveChecker(clickedEl)
+{
+    if (clickedEl.classList.contains("selected") && !clickedEl.hasChildNodes())
+    {
+        var children = CURRENT_SELECTED_CHECKER.childNodes;
+        let clone = children[0].cloneNode();
+        clone.addEventListener("click", () => { selectPermitedSteps(clone, field_array); });
+        clickedEl.appendChild(clone);
+        CURRENT_SELECTED_CHECKER.removeChild(children[0]);
+
+        clearSelections(field_array);
+    }
 }
 
 
@@ -113,11 +204,15 @@ function selectPermitedSteps(el, field)
 
 const FIELD_WIDTH = 8;
 const FIELD_HEIGHT = 8;
-
-var field_array = new Array();
-
 const desk_ = document.getElementById("desk");
 const field_ = document.getElementById("field");
+const field_array = new Array();
+
+const DirectionMoves = { LeftTop : 0, LeftBottom : 1, RightTop : 2, RightBottom : 3 };
+
+var CURRENT_SELECTED_CHECKER;
+
+
 
 
 
@@ -144,6 +239,7 @@ for (let i = 0; i < FIELD_HEIGHT; ++i)
         let ceil = document.createElement("div");
         ceil.className = "ceil " + ((i + j) % 2 ? "white" : "black");
         ceil.id = i + ";" + j;
+        ceil.addEventListener("click", () => { moveChecker(ceil); }, false);
 
         if (i < 3 && (i + j) % 2 == 1)
         {
@@ -152,7 +248,7 @@ for (let i = 0; i < FIELD_HEIGHT; ++i)
             checker.addEventListener("click", () => { selectPermitedSteps(checker, field_array) }, false);
             ceil.appendChild(checker);
         }
-        if (i > 4 && (i + j) % 2 == 0)
+        if (i > 4 && (i + j) % 2 == 1)
         {
             let checker = document.createElement("div");
             checker.className = "checker white-checker";
