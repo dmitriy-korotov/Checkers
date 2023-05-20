@@ -7,6 +7,16 @@
 
 
 
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
+
+
+
 function resizeDesk(desk)
 {
     const FIELD_SIZE = window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth;
@@ -40,6 +50,11 @@ function selectPathOverChakers(num_row, num_ceil, field, class_outher_checker, p
     if (0 <= num_row && num_row < field.length && 0 <= num_ceil && num_ceil < field[0].length && !field[num_row][num_ceil].hasChildNodes())
     {
         let this_elem = field[num_row][num_ceil];
+
+        if (this_elem.classList.contains("selected"))
+        {
+            return;
+        }
 
         this_elem.classList.add("selected");
         this_elem.classList.remove("white");
@@ -102,9 +117,7 @@ function selectChecker(num_row, num_ceil, field, vertical_step, class_outher_che
             right_elem.classList.add("selected");
             right_elem.classList.remove("white");
         }
-        else if (right_elem.firstChild.classList.contains(class_outher_checker)
-                 &&
-                 0 <= (num_row + 2*vertical_step) && (num_row + 2*vertical_step) < field.length && num_ceil + 2 < field[0].length)
+        else if (right_elem.firstChild.classList.contains(class_outher_checker))
         {
             selectPathOverChakers(num_row + 2*vertical_step, num_ceil + 2, field, class_outher_checker,
                                   (vertical_step > 0) ? DirectionMoves.RightBottom : DirectionMoves.RightTop);
@@ -120,9 +133,7 @@ function selectChecker(num_row, num_ceil, field, vertical_step, class_outher_che
             left_elem.classList.add("selected");
             left_elem.classList.remove("white");
         }
-        else if (left_elem.firstChild.classList.contains(class_outher_checker)
-                 &&
-                 0 <= (num_row + 2*vertical_step) && (num_row + 2*vertical_step) < field.length && num_ceil - 2 >= 0)
+        else if (left_elem.firstChild.classList.contains(class_outher_checker))
         {
             selectPathOverChakers(num_row + 2*vertical_step, num_ceil - 2, field, class_outher_checker,
                                   (vertical_step > 0) ? DirectionMoves.LeftBottom : DirectionMoves.LeftTop);
@@ -180,16 +191,169 @@ function selectPermitedSteps(el, field)
 
 
 
-function moveChecker(clickedEl)
+function getPathToSelectedElement(start, end, field, class_outher_checker, prev_checked)
 {
-    if (clickedEl.classList.contains("selected") && !clickedEl.hasChildNodes())
-    {
-        var children = CURRENT_SELECTED_CHECKER.childNodes;
-        let clone = children[0].cloneNode();
-        clone.addEventListener("click", () => { selectPermitedSteps(clone, field_array); });
-        clickedEl.appendChild(clone);
-        CURRENT_SELECTED_CHECKER.removeChild(children[0]);
+    console.log(start, end);
 
+    if (!start.classList.contains("selected"))
+    {
+        return [];
+    }
+    
+    let div_index_in_ID = start.id.indexOf(';');
+    let num_row_start = Number(start.id.substr(0, div_index_in_ID));
+    let num_ceil_start = Number(start.id.substr(div_index_in_ID + 1, start.id.length));
+
+    div_index_in_ID = end.id.indexOf(';');
+    let num_row_end = Number(end.id.substr(0, div_index_in_ID));
+    let num_ceil_end = Number(end.id.substr(div_index_in_ID + 1, end.id.length));
+
+    if (start == end)
+    {
+        console.log("Finded!");
+        return [[num_row_end, num_ceil_end]];
+    }
+
+    // Right bottom
+    if (prev_checked != DirectionMoves.LeftTop && 0 <= (num_row_start + 1) && (num_row_start + 1) < field.length && num_ceil_start + 1 < field[0].length)
+    {
+        let right_elem = field[num_row_start + 1][num_ceil_start + 1];
+
+        if (right_elem.hasChildNodes() && right_elem.firstChild.classList.contains(class_outher_checker)
+            &&
+            0 <= (num_row_start + 2) && (num_row_start + 2) < field.length && num_ceil_start + 2 < field[0].length)
+        {
+            let returned_path = getPathToSelectedElement(field[num_row_start + 2][num_ceil_start + 2], end, field, class_outher_checker, DirectionMoves.RightBottom);
+            if (returned_path.length != 0)
+            {
+                return [].concat([[num_row_start, num_ceil_start]], returned_path);
+            }
+        }
+    }
+    // Left Bottom
+    if (prev_checked != DirectionMoves.RightTop && 0 <= (num_row_start + 1) && (num_row_start + 1) < field.length && num_ceil_start - 1 >= 0)
+    {
+        let left_elem = field[num_row_start + 1][num_ceil_start - 1];
+        
+        if (left_elem.hasChildNodes() && left_elem.firstChild.classList.contains(class_outher_checker)
+            &&
+            0 <= (num_row_start + 2) && (num_row_start + 2) < field.length && num_ceil_start - 2 >= 0)
+        {
+            let returned_path = getPathToSelectedElement(field[num_row_start + 2][num_ceil_start - 2], end, field, class_outher_checker, DirectionMoves.LeftBottom);
+            if (returned_path.length != 0)
+            {
+                return [].concat([[num_row_start, num_ceil_start]], returned_path);
+            }   
+        }
+    }
+    // Right Top
+    if (prev_checked != DirectionMoves.LeftBottom && 0 <= (num_row_start - 1) && (num_row_start - 1) < field.length && num_ceil_start + 1 < field[0].length)
+    {
+        let right_elem = field[num_row_start - 1][num_ceil_start + 1];
+
+        if (right_elem.hasChildNodes() && right_elem.firstChild.classList.contains(class_outher_checker)
+            &&
+            0 <= (num_row_start - 2) && (num_row_start - 2) < field.length && num_ceil_start + 2 < field[0].length)
+        {
+            let returned_path = getPathToSelectedElement(field[num_row_start - 2][num_ceil_start + 2], end, field, class_outher_checker, DirectionMoves.RightTop);
+            if (returned_path.length != 0)
+            {
+                return [].concat([[num_row_start, num_ceil_start]], returned_path);
+            }   
+        }
+    }
+    // Left Top
+    if (prev_checked != DirectionMoves.RightBottom && 0 <= (num_row_start - 1) && (num_row_start - 1) < field.length && num_ceil_start - 1 >= 0)
+    {
+        let left_elem = field[num_row_start - 1][num_ceil_start - 1];
+
+        if (left_elem.hasChildNodes() && left_elem.firstChild.classList.contains(class_outher_checker)
+            &&
+            0 <= (num_row_start + 2) && (num_row_start - 2) < field.length && num_ceil_start - 2 >= 0)
+        {
+            let returned_path = getPathToSelectedElement(field[num_row_start - 2][num_ceil_start - 2], end, field, class_outher_checker, DirectionMoves.LeftTop);
+            if (returned_path.length != 0)
+            {
+                return [].concat([[num_row_start, num_ceil_start]], returned_path);
+            }   
+        }
+    }
+
+    return [];
+}
+
+
+
+function beatTheCheckers(path, index_position, field)
+{
+    if (path.length < 2 || index_position + 1 >= path.length)
+    {
+        return;
+    }
+    let fst_index_beated_checker = (path[index_position][0] + path[index_position + 1][0]) / 2;
+    let scnd_index_beated_checker = (path[index_position][1] + path[index_position + 1][1]) / 2;
+    let beated_checker_parent = field[fst_index_beated_checker][scnd_index_beated_checker];
+
+    let checker_position = field[path[index_position][0]][path[index_position][1]];
+    let checker = checker_position.firstChild;
+    checker_position.removeChild(checker_position.firstChild);
+
+    beated_checker_parent.removeChild(beated_checker_parent.firstChild);
+    
+    field[path[index_position + 1][0]][path[index_position + 1][1]].appendChild(checker);
+
+    setTimeout(() => { beatTheCheckers(path, index_position + 1, field); }, 500);
+}
+
+
+
+function moveIfForward(checker, target_position, field, vertical_step)
+{
+    let div_index_in_ID = checker.parentElement.id.indexOf(';');
+    let num_row = Number(checker.parentElement.id.substr(0, div_index_in_ID));
+    let num_ceil = Number(checker.parentElement.id.substr(div_index_in_ID + 1, checker.parentElement.id.length));
+
+    if (0 <= (num_row + vertical_step) && (num_row + vertical_step) < field.length && num_ceil + 1 < field[0].length
+        &&
+        field[num_row + vertical_step][num_ceil + 1] == target_position)
+    {
+        let moved_checker = checker.cloneNode();
+        checker.parentElement.removeChild(checker);
+        moved_checker.addEventListener("click", () => { selectPermitedSteps(moved_checker, field); });
+        target_position.appendChild(moved_checker);
+        return true;
+    }
+    if (0 <= (num_row + vertical_step) && (num_row + vertical_step) < field.length && num_ceil - 1 >= 0
+        &&
+        field[num_row + vertical_step][num_ceil - 1] == target_position)
+    {
+        let moved_checker = checker.cloneNode();
+        checker.parentElement.removeChild(checker);
+        moved_checker.addEventListener("click", () => { selectPermitedSteps(moved_checker, field); });
+        target_position.appendChild(moved_checker);
+        return true;
+    }
+    return false;
+}
+
+
+
+function moveChecker(target_position)
+{
+    if (target_position.classList.contains("selected") && ! target_position.hasChildNodes())
+    {
+        var checker = CURRENT_SELECTED_CHECKER.firstChild;
+
+        let premited_for_jump_checkers = (checker.classList.contains("white-checker")) ? "black-checker" : "white-checker";
+        let vertical_step = (checker.classList.contains("white-checker")) ? -1 : 1;
+
+        if (!moveIfForward(checker, target_position, field_array, vertical_step))
+        {
+            let path_to_selected_position = getPathToSelectedElement(CURRENT_SELECTED_CHECKER, target_position,
+                                                                     field_array, premited_for_jump_checkers, DirectionMoves.NoMove);
+            console.log(path_to_selected_position);
+            beatTheCheckers(path_to_selected_position, 0, field_array);
+        }
         clearSelections(field_array);
     }
 }
@@ -208,16 +372,14 @@ const desk_ = document.getElementById("desk");
 const field_ = document.getElementById("field");
 const field_array = new Array();
 
-const DirectionMoves = { LeftTop : 0, LeftBottom : 1, RightTop : 2, RightBottom : 3 };
+const DirectionMoves = { LeftTop : 0, LeftBottom : 1, RightTop : 2, RightBottom : 3 , NoMove : 4 };
 
 var CURRENT_SELECTED_CHECKER;
 
 
 
-
-
 /*
-    MAIN
+    FIELD RENRED
 */
 
 

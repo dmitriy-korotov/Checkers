@@ -73,6 +73,14 @@ body {
     background-image: url(../images/BlackChecker.png);
 }
 
+.black-checker-king {
+    background-image: url(../images/BlackChekerKing.png);
+}
+
 .white-checker {
     background-image: url(../images/WhiteCheker.png);
+}
+
+.white-checker-king {
+    background-image: url(../images/WhiteChekerKing.png);
 }
